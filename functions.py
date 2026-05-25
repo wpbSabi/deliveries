@@ -58,6 +58,15 @@ def summarize_results(
     print(f" MAE: {mae:.3f} \n RMSE: {rmse:.3f} \n R2: {r2:.3f} \n MAPE: {mape:.3f}")
 
     # Create a results DataFrame that includes the dimensions and the actual vs predicted metrics
+    results = (
+        df.loc[
+            (df["order_date"] >= run_date)
+            & (df["order_date"] <= run_date + pd.Timedelta(days=7)),
+            ["origin_country", "us_destination_state", "order_date", "order_number"],
+        ]
+        .reset_index(drop=True)
+        .copy()
+    )
     results["actual"] = y_test.reset_index(drop=True)
     results["pred"] = np.round(y_pred, 2)
     results["abs_err"] = (results["actual"] - results["pred"]).abs()
