@@ -58,7 +58,9 @@ def summarize_results(
     # If print_stats is True, print the metrics to the console
     if print_stats:
         print(f"Predicted rows: {len(y_pred)}")
-        print(f" MAE: {mae:.3f} \n RMSE: {rmse:.3f} \n R2: {r2:.3f} \n MAPE: {mape:.3f}")
+        print(
+            f" MAE: {mae:.3f} \n RMSE: {rmse:.3f} \n R2: {r2:.3f} \n MAPE: {mape:.3f}"
+        )
 
     # Create a results DataFrame that includes the dimensions and the actual vs predicted metrics
     results = (
@@ -78,7 +80,9 @@ def summarize_results(
     return results, mape
 
 
-def train_test_split(df: pd.DataFrame, run_date: pd.Timestamp) -> tuple:
+def train_test_split(
+    df: pd.DataFrame, run_date: pd.Timestamp, window_days: int
+) -> tuple:
     """
     Split the DataFrame into training and testing sets based on the order_date.
     The testing data will include one week of data starting from the run_date,
@@ -87,6 +91,7 @@ def train_test_split(df: pd.DataFrame, run_date: pd.Timestamp) -> tuple:
     Args:
         df (pd.DataFrame): The input DataFrame containing the features data to be split.
         run_date (pd.Timestamp): The date to use as the cutoff for splitting the data.
+        window_days (int): The number of days to include in the testing window.
 
     Returns:
         tuple: A tuple containing the training features (X_train), training target (y_train),
@@ -97,12 +102,16 @@ def train_test_split(df: pd.DataFrame, run_date: pd.Timestamp) -> tuple:
     features_train = df[df["order_date"] < run_date]
     features_test1 = df[df["order_date"] >= run_date]
     features_test = features_test1[
-        features_test1["order_date"] <= run_date + pd.Timedelta(days=7)
+        features_test1["order_date"] <= run_date + pd.Timedelta(days=window_days)
     ]
 
     # Remove order date from features, maybe add back for future features, such as a rolling average or seasonality
-    features_train = features_train.drop(columns=["order_date", "order_number"])
-    features_test = features_test.drop(columns=["order_date", "order_number"])
+    features_train = features_train.drop(
+        columns=["delivery_date", "order_date", "order_number"]
+    )
+    features_test = features_test.drop(
+        columns=["delivery_date", "order_date", "order_number"]
+    )
 
     features_train.reset_index(drop=True, inplace=True)
     features_test.reset_index(drop=True, inplace=True)
