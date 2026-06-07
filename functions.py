@@ -33,6 +33,7 @@ def summarize_results(
     y_test: pd.Series,
     y_pred: pd.Series,
     model_name: str,
+    window_days: int,
     print_stats: bool = True,
 ) -> pd.DataFrame:
     """
@@ -46,6 +47,8 @@ def summarize_results(
         y_test (pd.Series): The actual values for the test set.
         y_pred (pd.Series): The predicted values for the test set.
         model_name (str): The name of the model for which to summarize results.
+        window_days (int): The number of days to include in the testing window.
+        print_stats (bool): Whether to print the evaluation metrics to the console.
 
     Returns:
         pd.DataFrame: A new DataFrame with the evaluation metrics and predictions.
@@ -66,7 +69,7 @@ def summarize_results(
     results = (
         df.loc[
             (df["order_date"] >= run_date)
-            & (df["order_date"] <= run_date + pd.Timedelta(days=7)),
+            & (df["order_date"] <= run_date + pd.Timedelta(days=window_days)),
             ["origin_country", "us_destination_state", "order_date", "order_number"],
         ]
         .reset_index(drop=True)
