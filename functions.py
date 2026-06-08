@@ -131,3 +131,50 @@ def train_test_split(
     y_test = features_test["actual_days"]
 
     return X_train, y_train, X_test, y_test, feature_cols
+
+
+def return_regressor_results(
+    model: pd.DataFrame,
+    df: pd.DataFrame,
+    run_date: pd.Timestamp,
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
+    X_test: pd.DataFrame,
+    y_test: pd.Series,
+) -> pd.DataFrame:
+    """
+    Runs a regression model and returns the results and feature importances
+
+    Arguments:
+                model: a regressor model, e.g. AdaBoostRegressor()
+                df (pd.DataFrame): the original dataframe, including dimensions and target variable
+                run_date (pd.Timestamp): the date to use as the cutoff for splitting the data into
+                X_train (pd.DataFrame): training data features
+                y_train (pd.Series): training data target variable
+                X_test (pd.DataFrame): testing data features
+                y_test (pd.Series): testing data target variable
+
+    Returns:
+                results (pd.DataFrame): a dataframe summarizing the results of the model, including MAPE and RMSE
+                feature_importances (numpy.ndarray): a series of the feature importances from the model
+    """
+
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+
+    # Testing data dimension columns
+    data = (
+        df.loc[
+            (df["order_date"] >= run_date)
+            & (df["order_date"] <= run_date + pd.Timedelta(days=7)),
+            ["origin_country", "us_destination_state", "order_date", "order_number"],
+        ]
+        .reset_index(drop=True)
+        .copy()
+    )
+
+    results, mape = summarize_results(
+        data, run_date, y_test, y_pred, model_name=str(model), window_days=7
+    )
+
+    return results, model.feature_importances_
